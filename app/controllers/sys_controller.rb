@@ -40,7 +40,7 @@ class SysController < ActionController::Base
   end
 
   def users
-	Users.fund :all
+	Users.find :all
   end
 
 protected
