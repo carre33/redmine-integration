@@ -134,7 +134,7 @@ class RepositoriesController < ApplicationController
   end
   
   def diff
-    @rev_to = params[:rev_to] ? params[:rev_to].to_i : (@rev - 1)
+    get_rev_to
     @diff_type = params[:type] || User.current.pref[:diff_type] || 'inline'
     @diff_type = 'inline' unless %w(inline sbs).include?(@diff_type)
     
@@ -185,9 +185,14 @@ private
     render_404 and return false unless @repository
     @path = params[:path].join('/') unless params[:path].nil?
     @path ||= ''
-    @rev = params[:rev].to_i if params[:rev]
+    @rev = params[:rev] if params[:rev]
   rescue ActiveRecord::RecordNotFound
     render_404
+  end
+
+  def get_rev_to
+    @rev_to = params[:rev_to].to_i ? params[:rev_to].to_i : (@rev.to_i - 1) if @rev !~ /\D/
+    @rev_to = params[:rev_to] ? params[:rev_to] : (nil) if !(@rev !~ /\D/)
   end
 
   def show_error_not_found

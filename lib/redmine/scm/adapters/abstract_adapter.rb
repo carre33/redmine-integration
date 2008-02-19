@@ -182,7 +182,12 @@ module Redmine
             end
           }.last
         end 
-      end
+   end
+   
+
+def get_rev(rev,path)
+Revision.new
+end
       
       class Revision
         attr_accessor :identifier, :scmid, :name, :author, :time, :message, :paths, :revision, :branch

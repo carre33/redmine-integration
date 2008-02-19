@@ -31,9 +31,14 @@ module Redmine
           cmd = "#{SVN_BIN} info --xml #{target('')}"
           cmd << credentials_string
           info = nil
+			#RAILS_DEFAULT_LOGGER << "\n\n#{cmd}\n\n"
           shellout(cmd) do |io|
             begin
+	          #RAILS_DEFAULT_LOGGER << "\n\nio:\n#{io.inspect}\n\n"
+			  #io.seek 0, IO::SEEK_SET
+	          #RAILS_DEFAULT_LOGGER << "\n\ndata:\n#{io.read}\n\n"
               doc = REXML::Document.new(io)
+	          #RAILS_DEFAULT_LOGGER << "\n\ndoc:\n#{doc}\n\n"
               #root_url = doc.elements["info/entry/repository/root"].text          
               info = Info.new({:root_url => doc.elements["info/entry/repository/root"].text,
                                :lastrev => Revision.new({
@@ -42,9 +47,12 @@ module Redmine
                                  :author => (doc.elements["info/entry/commit/author"] ? doc.elements["info/entry/commit/author"].text : "")
                                })
                              })
-            rescue
+            rescue => e
+
+	  #RAILS_DEFAULT_LOGGER << "\n\nscm_info error: #{e}\n#{e.backtrace.join "\n"}\n\n"
             end
           end
+	      #RAILS_DEFAULT_LOGGER << "\n\ncmd error: #{$?}\n#{$?.inspect}\n\n"
           return nil if $? && $?.exitstatus != 0
           info
         rescue CommandFailed
