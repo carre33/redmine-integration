@@ -46,10 +46,10 @@ Rails::Initializer.run do |config|
 	config.action_mailer.smtp_settings = {
 		:address => "127.0.0.1",
 		:port => 25,
-		:domain => "somenet.foo",
+		:domain => "dev.roach.org.ua",
 		:authentication => :login,
-		:user_name => "redmine",
-		:password => "redmine",
+		:user_name => "evdev",
+		:password => "",
 	}
 	
 	config.action_mailer.perform_deliveries = true
@@ -58,7 +58,8 @@ Rails::Initializer.run do |config|
 	# The :test delivery method accumulates sent emails in the
 	# ActionMailer::Base.deliveries array.
 	#config.action_mailer.delivery_method = :test
-	config.action_mailer.delivery_method = :smtp  
+	#config.action_mailer.delivery_method = :smtp
+	#config.action_mailer.delivery_method = :sendmail
 
 end
 
