@@ -185,7 +185,7 @@ private
     render_404 and return false unless @repository
     @path = params[:path].join('/') unless params[:path].nil?
     @path ||= ''
-    @rev = params[:rev] if params[:rev]
+    @rev = params[:rev]
   rescue ActiveRecord::RecordNotFound
     render_404
   end
