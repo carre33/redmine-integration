@@ -59,11 +59,7 @@ module RepositoriesHelper
   end
 
   def rev_name(revision)
-    if revision.instance_of? String
-      revision[0..7]
-    else
-      revision.name[0..7]
-    end
+    revision[0..7]
   end
 
   def subversion_field_tags(form, repository)
