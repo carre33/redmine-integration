@@ -36,7 +36,7 @@ class Repository::Subversion < Repository
   end
   
   def fetch_changesets
-	RAILS_DEFAULT_LOGGER.info "\n\nFetching chanfesets...\n\n"
+	RAILS_DEFAULT_LOGGER.info "\n\nFetching changesets...\n\n"
     scm_info = scm.info
 	RAILS_DEFAULT_LOGGER.info "\n\nscm_info:\n#{scm_info.inspect}\n\n"
     if scm_info
@@ -46,7 +46,7 @@ class Repository::Subversion < Repository
       scm_revision = scm_info.lastrev.identifier.to_i
       if db_revision.to_i < scm_revision
         logger.debug "Fetching changesets for repository #{url}" if logger && logger.debug?
-        identifier_from = db_revision + 1
+        identifier_from = db_revision.to_i + 1
         while (identifier_from <= scm_revision)
           # loads changesets by batches of 200
           identifier_to = [identifier_from + 199, scm_revision].min
