@@ -31,7 +31,6 @@ module Redmine
 cmd="cd #{target('')} && git show #{rev} #{path}" if rev!='latest'
 cmd="cd #{target('')} && git log -1 master -- #{path}" if 
 rev=='latest' or rev.nil?
-puts cmd
 rev=[]
  i=0
     shellout(cmd) do |io|
@@ -100,7 +99,6 @@ end
                                     :kind => ((e.first.include? '/') ? 'dir' : 'file'),
                                     :lastrev => get_rev(identifier,(path.empty? ? name : "#{path}/#{name}"))
                                     }) unless entries.detect{|entry| entry.name == name}
- 	puts e[0..3]   
          end
 	end
 	end
@@ -124,7 +122,6 @@ end
 		cmd << " #{identifier_from}.. " if identifier_from
 		cmd << " #{identifier_to} " if identifier_to
                 #cmd << " HEAD " if !identifier_to
-		puts cmd
 		shellout(cmd) do |io|
 		files=[]
 		params={:commit=>'',:author=>'',:date=>'',:message=>'',:file=>{:path=>'',:action=>''}}
@@ -159,7 +156,6 @@ end
           revisions
         rescue Errno::ENOENT => e
           raise CommandFailed
-     puts 'revs: #{revisions}'
 	   end
         
         def diff(path, identifier_from, identifier_to=nil, type="inline")
