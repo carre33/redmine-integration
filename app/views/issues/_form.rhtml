@@ -1,8 +1,10 @@
 <% if @issue.new_record? %>
+<div class="issue new">
 <p><%= f.select :tracker_id, @project.trackers.collect {|t| [t.name, t.id]}, :required => true %></p>
 <%= observe_field :issue_tracker_id, :url => { :action => :new },
                                      :update => :content,
                                      :with => "Form.serialize('issue-form')" %>
+<hr />
 <% end %>
 
 <div id="issue_descr_fields" <%= 'style="display:none"' unless @issue.new_record? || @issue.errors.any? %>>
@@ -45,6 +47,7 @@
 
 <% if @issue.new_record? %>
 <p><label><%=l(:label_attachment_plural)%></label><%= render :partial => 'attachments/form' %></p>
+</div>
 <% end %>
 
 <%= wikitoolbar_for 'issue_description' %>
