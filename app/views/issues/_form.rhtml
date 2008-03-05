@@ -1,8 +1,10 @@
 <% if @issue.new_record? %>
+<div class="issue new">
 <p><%= f.select :tracker_id, @project.trackers.collect {|t| [t.name, t.id]}, :required => true %></p>
 <%= observe_field :issue_tracker_id, :url => { :action => :new },
                                      :update => :content,
                                      :with => "Form.serialize('issue-form')" %>
+<hr />
 <% end %>
 
 <div id="issue_descr_fields" <%= 'style="display:none"' unless @issue.new_record? || @issue.errors.any? %>>
@@ -47,6 +49,7 @@
 <p id="attachments_p"><label for="attachment_file"><%=l(:label_attachment)%>
 <%= image_to_function "add.png", "addFileField();return false" %></label>
 <%= file_field_tag 'attachments[]', :size => 30  %> <em>(<%= l(:label_max_size) %>: <%= number_to_human_size(Setting.attachment_max_size.to_i.kilobytes) %>)</em></p>
+</div>
 <% end %>
 
 <%= wikitoolbar_for 'issue_description' %>
