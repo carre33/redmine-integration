@@ -9,12 +9,13 @@
 
 <h2><%= @issue.tracker.name %> #<%= @issue.id %></h2>
 
+<p class="author">
+<%= authoring @issue.created_on, @issue.author %>.
+<%= l(:label_updated_time, distance_of_time_in_words(Time.now, @issue.updated_on)) if @issue.created_on != @issue.updated_on %>.
+</p>
+
 <div class="issue <%= "status-#{@issue.status.position} priority-#{@issue.priority.position}" %>">
         <h3><%=h @issue.subject %></h3>
-        <p class="author">
-        <%= authoring @issue.created_on, @issue.author %>.
-        <%= l(:label_updated_time, distance_of_time_in_words(Time.now, @issue.updated_on)) if @issue.created_on != @issue.updated_on %>.
-        </p>
 
 <table width="100%">
 <tr>
