@@ -43,6 +43,29 @@
 </tr>
 <% end %>
 </tbody>
+<tfoot>
+<tr>
+  <td align="right">Totals:</td>
+  <% for status in @statuses %>
+  <td align="center"><%= aggregate_link data, { "status_id" => status.id }, 
+                                                :controller => 'issues', :action => 'index', :project_id => @project, 
+                                                :set_filter => 1, 
+                                                "status_id" => status.id %></td>
+  <% end %>
+  <td align="center"><%= aggregate_link data, { "closed" => 0 },
+                                                :controller => 'issues', :action => 'index', :project_id => @project, 
+                                                :set_filter => 1,
+                                                "status_id" => "o" %></td>
+  <td align="center"><%= aggregate_link data, { "closed" => 1 },
+                                                :controller => 'issues', :action => 'index', :project_id => @project, 
+                                                :set_filter => 1,
+                                                "status_id" => "c" %></td>
+  <td align="center"><%= aggregate_link data, { },
+                                                :controller => 'issues', :action => 'index', :project_id => @project, 
+                                                :set_filter => 1,
+                                                "status_id" => "*" %></td>  
+</tr>
+</tfoot>
 </table>
 <% end
   reset_cycle %>
