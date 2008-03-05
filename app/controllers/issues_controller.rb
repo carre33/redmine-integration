@@ -49,7 +49,13 @@ class IssuesController < ApplicationController
     sort_update
     retrieve_query
     if @query.valid?
-      limit = %w(pdf csv).include?(params[:format]) ? Setting.issues_export_limit.to_i : per_page_option
+      limit = per_page_option
+      respond_to do |format|
+        format.html { }
+        format.atom { }
+        format.csv  { limit = Setting.issues_export_limit.to_i }
+        format.pdf  { limit = Setting.issues_export_limit.to_i }
+      end
       @issue_count = Issue.count(:include => [:status, :project], :conditions => @query.statement)
       @issue_pages = Paginator.new self, @issue_count, limit, params['page']
       @issues = Issue.find :all, :order => sort_clause,
@@ -74,7 +80,7 @@ class IssuesController < ApplicationController
     sort_update
     retrieve_query
     if @query.valid?
-      @changes = Journal.find :all, :include => [ :details, :user, {:issue => [:project, :author, :tracker, :status]} ],
+      @journals = Journal.find :all, :include => [ :details, :user, {:issue => [:project, :author, :tracker, :status]} ],
                                      :conditions => @query.statement,
                                      :limit => 25,
                                      :order => "#{Journal.table_name}.created_on DESC"
@@ -86,12 +92,15 @@ class IssuesController < ApplicationController
   def show
     @custom_values = @project.custom_fields_for_issues(@issue.tracker).collect { |x| @issue.custom_values.find_by_custom_field_id(x.id) || CustomValue.new(:custom_field => x, :customized => @issue) }
     @journals = @issue.journals.find(:all, :include => [:user, :details], :order => "#{Journal.table_name}.created_on ASC")
+    @journals.each_with_index {|j,i| j.indice = i+1}
+    @journals.reverse! if User.current.wants_comments_in_reverse_order?
     @allowed_statuses = @issue.new_statuses_allowed_to(User.current)
     @edit_allowed = User.current.allowed_to?(:edit_issues, @project)
     @activities = Enumeration::get_values('ACTI')
     @priorities = Enumeration::get_values('IPRI')
     respond_to do |format|
       format.html { render :template => 'issues/show.rhtml' }
+      format.atom { render :action => 'changes', :layout => false, :content_type => 'application/atom+xml' }
       format.pdf  { send_data(render(:template => 'issues/show.rfpdf', :layout => false), :type => 'application/pdf', :filename => "#{@project.identifier}-#{@issue.id}.pdf") }
     end
   end
@@ -116,7 +125,7 @@ class IssuesController < ApplicationController
       return
     end    
     @issue.status = default_status
-    @allowed_statuses = ([default_status] + default_status.find_new_statuses_allowed_to(User.current.role_for_project(@project), @issue.tracker))
+    @allowed_statuses = ([default_status] + default_status.find_new_statuses_allowed_to(User.current.role_for_project(@project), @issue.tracker)).uniq
     
     if request.get? || request.xhr?
       @issue.start_date ||= Date.today
@@ -263,6 +272,26 @@ class IssuesController < ApplicationController
   end
   
   def destroy
+    @hours = TimeEntry.sum(:hours, :conditions => ['issue_id IN (?)', @issues]).to_f
+    if @hours > 0
+      case params[:todo]
+      when 'destroy'
+        # nothing to do
+      when 'nullify'
+        TimeEntry.update_all('issue_id = NULL', ['issue_id IN (?)', @issues])
+      when 'reassign'
+        reassign_to = @project.issues.find_by_id(params[:reassign_to_id])
+        if reassign_to.nil?
+          flash.now[:error] = l(:error_issue_not_found_in_project)
+          return
+        else
+          TimeEntry.update_all("issue_id = #{reassign_to.id}", ['issue_id IN (?)', @issues])
+        end
+      else
+        # display the destroy form
+        return
+      end
+    end
     @issues.each(&:destroy)
     redirect_to :action => 'index', :project_id => @project
   end

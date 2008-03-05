@@ -80,6 +80,7 @@ notice_default_data_loaded: Default configuration successfully loaded.
 error_can_t_load_default_data: "Default configuration could not be loaded: %s"
 error_scm_not_found: "Entry and/or revision doesn't exist in the repository."
 error_scm_command_failed: "An error occurred when trying to access the repository: %s"
+error_issue_not_found_in_project: 'The issue was not found or does not belong to this project'
 
 mail_subject_lost_password: Your Redmine password
 mail_body_lost_password: 'To change your Redmine password, click on the following link:'
@@ -176,6 +177,7 @@ field_column_names: Columns
 field_time_zone: Time zone
 field_searchable: Searchable
 field_default_value: Default value
+field_comments_sorting: Afficher les commentaires
 
 setting_app_title: Application title
 setting_app_subtitle: Application subtitle
@@ -205,6 +207,7 @@ setting_emails_footer: Emails footer
 setting_protocol: Protocol
 setting_per_page_options: Objects per page options
 setting_user_format: Users display format
+setting_activity_days_default: Days displayed on project activity
 
 project_module_issue_tracking: Issue tracking
 project_module_time_tracking: Time tracking
@@ -319,7 +322,7 @@ label_version: Version
 label_version_new: New version
 label_version_plural: Versions
 label_confirmation: Confirmation
-label_export_to: Export to
+label_export_to: 'Also available in:'
 label_read: Read...
 label_public_projects: Public projects
 label_open_issues: open
@@ -362,7 +365,15 @@ label_in_less_than: in less than
 label_in_more_than: in more than
 label_in: in
 label_today: today
+label_all_time: all time
+label_yesterday: yesterday
 label_this_week: this week
+label_last_week: last week
+label_last_n_days: last %d days
+label_this_month: this month
+label_last_month: last month
+label_this_year: this year
+label_date_range: Date range
 label_less_than_ago: less than days ago
 label_more_than_ago: more than days ago
 label_ago: days ago
@@ -489,6 +500,11 @@ label_scm: SCM
 label_plugins: Plugins
 label_ldap_authentication: LDAP authentication
 label_downloads_abbr: D/L
+label_optional_description: Optional description
+label_add_another_file: Add another file
+label_preferences: Preferences
+label_chronological_order: In chronological order
+label_reverse_chronological_order: In reverse chronological order
 
 button_login: Login
 button_submit: Submit
@@ -567,6 +583,10 @@ text_select_project_modules: 'Select modules to enable for this project:'
 text_default_administrator_account_changed: Default administrator account changed
 text_file_repository_writable: File repository writable
 text_rmagick_available: RMagick available (optional)
+text_destroy_time_entries_question: %.02f hours were reported on the issues you are about to delete. What do you want to do ?
+text_destroy_time_entries: Delete reported hours
+text_assign_time_entries_to_project: Assign reported hours to the project
+text_reassign_time_entries: 'Reassign reported hours to this issue:'
 
 default_role_manager: Manager
 default_role_developper: Developer

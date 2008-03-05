@@ -23,28 +23,33 @@ class TimelogController < ApplicationController
   helper :sort
   include SortHelper
   helper :issues
+  include TimelogHelper
   
   def report
-    @available_criterias = { 'version' => {:sql => "#{Issue.table_name}.fixed_version_id",
-                                          :values => @project.versions,
+    @available_criterias = { 'project' => {:sql => "#{TimeEntry.table_name}.project_id",
+                                          :klass => Project,
+                                          :label => :label_project},
+                             'version' => {:sql => "#{Issue.table_name}.fixed_version_id",
+                                          :klass => Version,
                                           :label => :label_version},
                              'category' => {:sql => "#{Issue.table_name}.category_id",
-                                            :values => @project.issue_categories,
+                                            :klass => IssueCategory,
                                             :label => :field_category},
                              'member' => {:sql => "#{TimeEntry.table_name}.user_id",
-                                         :values => @project.users,
+                                         :klass => User,
                                          :label => :label_member},
                              'tracker' => {:sql => "#{Issue.table_name}.tracker_id",
-                                          :values => Tracker.find(:all),
+                                          :klass => Tracker,
                                           :label => :label_tracker},
                              'activity' => {:sql => "#{TimeEntry.table_name}.activity_id",
-                                           :values => Enumeration::get_values('ACTI'),
+                                           :klass => Enumeration,
                                            :label => :label_activity}
                            }
     
     @criterias = params[:criterias] || []
     @criterias = @criterias.select{|criteria| @available_criterias.has_key? criteria}
     @criterias.uniq!
+    @criterias = @criterias[0,3]
     
     @columns = (params[:period] && %w(year month week).include?(params[:period])) ? params[:period] : 'month'
     
@@ -62,8 +67,11 @@ class TimelogController < ApplicationController
       sql_group_by = @criterias.collect{|criteria| @available_criterias[criteria][:sql]}.join(', ')
       
       sql = "SELECT #{sql_select}, tyear, tmonth, tweek, SUM(hours) AS hours"
-      sql << " FROM #{TimeEntry.table_name} LEFT JOIN #{Issue.table_name} ON #{TimeEntry.table_name}.issue_id = #{Issue.table_name}.id"
-      sql << " WHERE #{TimeEntry.table_name}.project_id = %s" % @project.id
+      sql << " FROM #{TimeEntry.table_name}"
+      sql << " LEFT JOIN #{Issue.table_name} ON #{TimeEntry.table_name}.issue_id = #{Issue.table_name}.id"
+      sql << " LEFT JOIN #{Project.table_name} ON #{TimeEntry.table_name}.project_id = #{Project.table_name}.id"
+      sql << " WHERE (#{Project.table_name}.id = %s OR #{Project.table_name}.parent_id = %s)" % [@project.id, @project.id]
+      sql << " AND (%s)" % Project.allowed_to_condition(User.current, :view_time_entries)
       sql << " AND spent_on BETWEEN '%s' AND '%s'" % [ActiveRecord::Base.connection.quoted_date(@date_from.to_time), ActiveRecord::Base.connection.quoted_date(@date_to.to_time)]
       sql << " GROUP BY #{sql_group_by}, tyear, tmonth, tweek"
       
@@ -79,6 +87,8 @@ class TimelogController < ApplicationController
           row['week'] = "#{row['tyear']}-#{row['tweek']}"
         end
       end
+      
+      @total_hours = @hours.inject(0) {|s,k| s = s + k['hours'].to_f}
     end
        
     @periods = []
@@ -104,14 +114,87 @@ class TimelogController < ApplicationController
   def details
     sort_init 'spent_on', 'desc'
     sort_update
-    
-    @entries = (@issue ? @issue : @project).time_entries.find(:all, :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}], :order => sort_clause)
 
-    @total_hours = @entries.inject(0) { |sum,entry| sum + entry.hours }
-    @owner_id = User.current.id
+    @free_period = false
+    @from, @to = nil, nil
+
+    if params[:period_type] == '1' || (params[:period_type].nil? && !params[:period].nil?)
+      case params[:period].to_s
+      when 'today'
+        @from = @to = Date.today
+      when 'yesterday'
+        @from = @to = Date.today - 1
+      when 'current_week'
+        @from = Date.today - (Date.today.cwday - 1)%7
+        @to = @from + 6
+      when 'last_week'
+        @from = Date.today - 7 - (Date.today.cwday - 1)%7
+        @to = @from + 6
+      when '7_days'
+        @from = Date.today - 7
+        @to = Date.today
+      when 'current_month'
+        @from = Date.civil(Date.today.year, Date.today.month, 1)
+        @to = (@from >> 1) - 1
+      when 'last_month'
+        @from = Date.civil(Date.today.year, Date.today.month, 1) << 1
+        @to = (@from >> 1) - 1
+      when '30_days'
+        @from = Date.today - 30
+        @to = Date.today
+      when 'current_year'
+        @from = Date.civil(Date.today.year, 1, 1)
+        @to = Date.civil(Date.today.year, 12, 31)
+      end
+    elsif params[:period_type] == '2' || (params[:period_type].nil? && (!params[:from].nil? || !params[:to].nil?))
+      begin; @from = params[:from].to_s.to_date unless params[:from].blank?; rescue; end
+      begin; @to = params[:to].to_s.to_date unless params[:to].blank?; rescue; end
+      @free_period = true
+    else
+      # default
+    end
     
-    send_csv and return if 'csv' == params[:export]    
-    render :action => 'details', :layout => false if request.xhr?
+    @from, @to = @to, @from if @from && @to && @from > @to
+    
+    cond = ARCondition.new
+    cond << (@issue.nil? ? ["(#{Project.table_name}.id = ? OR #{Project.table_name}.parent_id = ?)", @project.id, @project.id] :
+                           ["#{TimeEntry.table_name}.issue_id = ?", @issue.id])
+    
+    if @from
+      if @to
+        cond << ['spent_on BETWEEN ? AND ?', @from, @to]
+      else
+        cond << ['spent_on >= ?', @from]
+      end
+    elsif @to
+      cond << ['spent_on <= ?', @to]
+    end
+
+    TimeEntry.visible_by(User.current) do
+      respond_to do |format|
+        format.html {
+          # Paginate results
+          @entry_count = TimeEntry.count(:include => :project, :conditions => cond.conditions)
+          @entry_pages = Paginator.new self, @entry_count, per_page_option, params['page']
+          @entries = TimeEntry.find(:all, 
+                                    :include => [:project, :activity, :user, {:issue => :tracker}],
+                                    :conditions => cond.conditions,
+                                    :order => sort_clause,
+                                    :limit  =>  @entry_pages.items_per_page,
+                                    :offset =>  @entry_pages.current.offset)
+          @total_hours = TimeEntry.sum(:hours, :include => :project, :conditions => cond.conditions).to_f
+          render :layout => !request.xhr?
+        }
+        format.csv {
+          # Export all entries
+          @entries = TimeEntry.find(:all, 
+                                    :include => [:project, :activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
+                                    :conditions => cond.conditions,
+                                    :order => sort_clause)
+          send_data(entries_to_csv(@entries).read, :type => 'text/csv; header=present', :filename => 'timelog.csv')
+        }
+      end
+    end
   end
   
   def edit
@@ -140,38 +223,5 @@ private
       render_404
       return false
     end
-  end
-  
-  def send_csv
-    ic = Iconv.new(l(:general_csv_encoding), 'UTF-8')    
-    export = StringIO.new
-    CSV::Writer.generate(export, l(:general_csv_separator)) do |csv|
-      # csv header fields
-      headers = [l(:field_spent_on),
-                 l(:field_user),
-                 l(:field_activity),
-                 l(:field_issue),
-                 l(:field_tracker),
-                 l(:field_subject),
-                 l(:field_hours),
-                 l(:field_comments)
-                 ]
-      csv << headers.collect {|c| begin; ic.iconv(c.to_s); rescue; c.to_s; end }
-      # csv lines
-      @entries.each do |entry|
-        fields = [l_date(entry.spent_on),
-                  entry.user,
-                  entry.activity,
-                  (entry.issue ? entry.issue.id : nil),
-                  (entry.issue ? entry.issue.tracker : nil),
-                  (entry.issue ? entry.issue.subject : nil),
-                  entry.hours,
-                  entry.comments
-                  ]
-        csv << fields.collect {|c| begin; ic.iconv(c.to_s); rescue; c.to_s; end }
-      end
-    end
-    export.rewind
-    send_data(export.read, :type => 'text/csv; header=present', :filename => 'export.csv')
   end
 end

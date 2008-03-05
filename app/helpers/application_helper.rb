@@ -90,6 +90,10 @@ module ApplicationHelper
     include_date ? local.strftime("#{@date_format} #{@time_format}") : local.strftime(@time_format)
   end
   
+  def html_hours(text)
+    text.gsub(%r{(\d+)\.(\d+)}, '<span class="hours hours-int">\1</span><span class="hours hours-dec">.\2</span>')
+  end
+  
   def authoring(created, author)
     time_tag = content_tag('acronym', distance_of_time_in_words(Time.now, created), :title => format_time(created))
     l(:label_added_time_by, author || 'Anonymous', time_tag)
@@ -392,7 +396,7 @@ module ApplicationHelper
   
   def labelled_tabular_form_for(name, object, options, &proc)
     options[:html] ||= {}
-    options[:html].store :class, "tabular"
+    options[:html][:class] = 'tabular' unless options[:html].has_key?(:class)
     form_for(name, object, options.merge({ :builder => TabularFormBuilder, :lang => current_language}), &proc)
   end
   
@@ -440,9 +444,14 @@ module ApplicationHelper
   
   def wikitoolbar_for(field_id)
     return '' unless Setting.text_formatting == 'textile'
+    
+    help_link = l(:setting_text_formatting) + ': ' +
+      link_to(l(:label_help), compute_public_path('wiki_syntax', 'help', 'html'),
+                              :onclick => "window.open(\"#{ compute_public_path('wiki_syntax', 'help', 'html') }\", \"\", \"resizable=yes, location=no, width=300, height=640, menubar=no, status=no, scrollbars=yes\"); return false;")
+
     javascript_include_tag('jstoolbar/jstoolbar') +
       javascript_include_tag("jstoolbar/lang/jstoolbar-#{current_language}") +
-      javascript_tag("var toolbar = new jsToolBar($('#{field_id}')); toolbar.draw();")
+      javascript_tag("var toolbar = new jsToolBar($('#{field_id}')); toolbar.setHelpLink('#{help_link}'); toolbar.draw();")
   end
   
   def content_for(name, content = nil, &block)

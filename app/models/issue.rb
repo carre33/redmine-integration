@@ -27,7 +27,7 @@ class Issue < ActiveRecord::Base
 
   has_many :journals, :as => :journalized, :dependent => :destroy
   has_many :attachments, :as => :container, :dependent => :destroy
-  has_many :time_entries, :dependent => :nullify
+  has_many :time_entries, :dependent => :delete_all
   has_many :custom_values, :dependent => :delete_all, :as => :customized
   has_many :custom_fields, :through => :custom_values
   has_and_belongs_to_many :changesets, :order => "revision ASC"
@@ -230,5 +230,11 @@ class Issue < ActiveRecord::Base
   
   def soonest_start
     @soonest_start ||= relations_to.collect{|relation| relation.successor_soonest_start}.compact.min
+  end
+  
+  def self.visible_by(usr)
+    with_scope(:find => { :conditions => Project.visible_by(usr) }) do
+      yield
+    end
   end
 end

@@ -1,5 +1,5 @@
 # redMine - project management software
-# Copyright (C) 2006  Jean-Philippe Lang
+# Copyright (C) 2006-2008  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,38 +15,27 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-class UserPreference < ActiveRecord::Base
-  belongs_to :user
-  serialize :others
+class ARCondition
+  attr_reader :conditions
   
-  attr_protected :others
-  
-  def initialize(attributes = nil)
-    super
-    self.others ||= {}
+  def initialize(condition=nil)
+    @conditions = ['1=1']
+    @conditions.add(condition) if condition
   end
   
-  def before_save
-    self.others ||= {}
-  end
-  
-  def [](attr_name)
-    if attribute_present? attr_name
-      super
+  def add(condition)
+    if condition.is_a?(Array)
+      @conditions.first << " AND (#{condition.first})"
+      @conditions += condition[1..-1]
+    elsif condition.is_a?(String)
+      @conditions.first << " AND (#{condition})"
     else
-      others ? others[attr_name] : nil
+      raise "Unsupported #{condition.class} condition: #{condition}"
     end
+    self
   end
-  
-  def []=(attr_name, value)
-    if attribute_present? attr_name
-      super
-    else
-      self.others ||= {}
-      self.others.store attr_name, value
-    end
+
+  def <<(condition)
+    add(condition)
   end
-  
-  def comments_sorting; self[:comments_sorting] end
-  def comments_sorting=(order); self[:comments_sorting]=order end
 end

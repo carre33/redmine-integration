@@ -80,7 +80,7 @@ a img{ border: 0; }
 /***** Tables *****/
 table.list { border: 1px solid #e4e4e4;  border-collapse: collapse; width: 100%; margin-bottom: 4px; }
 table.list th {  background-color:#EEEEEE; padding: 4px; white-space:nowrap; }
-table.list td { overflow: hidden; text-overflow: ellipsis; vertical-align: top;}
+table.list td { overflow: hidden; vertical-align: top;}
 table.list td.id { width: 2%; text-align: center;}
 table.list td.checkbox { width: 15px; padding: 0px;}
 
@@ -109,6 +109,11 @@ tr.user td.email { width:18%; }
 tr.user td { white-space: nowrap; }
 tr.user.locked, tr.user.registered { color: #aaa; }
 tr.user.locked a, tr.user.registered a { color: #aaa; }
+
+tr.time-entry { text-align: center; white-space: nowrap; }
+tr.time-entry td.subject, tr.time-entry td.comments { text-align: left; }
+tr.time-entry td.hours { text-align: right; font-weight: bold; padding-right: 0.5em; }
+tr.time-entry .hours-dec { font-size: 0.9em; }
 
 table.list tbody tr:hover { background-color:#ffffdd; }
 table td {padding:2px;}
@@ -169,6 +174,15 @@ div#roadmap .wiki h1:first-child { display: none; }
 div#roadmap .wiki h1 { font-size: 120%; }
 div#roadmap .wiki h2 { font-size: 110%; }
 
+table#time-report td.hours { text-align: right; padding-right: 0.5em; }
+table#time-report tbody tr { font-style: italic; color: #777; }
+table#time-report tbody tr.last-level { font-style: normal; color: #555; }
+table#time-report tbody tr.total { font-style: normal; font-weight: bold; color: #555; background-color:#EEEEEE; }
+table#time-report .hours-dec { font-size: 0.9em; }
+
+div.total-hours { text-align: left; font-size: 110%; font-weight: bold; }
+div.total-hours span.hours-int { font-size: 120%; }
+
 .autoscroll {overflow-x: auto; padding:1px; width:100%; margin-bottom: 1.2em;}
 #user_firstname, #user_lastname, #user_mail, #my_account_form select { width: 90%; }
 
@@ -208,7 +222,16 @@ width: 200px;
 .required {color: #bb0000;}
 .summary {font-style: italic;}
 
+#attachments_fields input[type=text] {margin-left: 8px; }
+
 div.attachments p { margin:4px 0 2px 0; }
+div.attachments img { vertical-align: middle; }
+div.attachments span.author { font-size: 0.9em; color: #888; }
+
+p.other-formats { text-align: right; font-size:0.9em; color: #666; }
+.other-formats span + span:before { content: "| "; }
+
+a.feed { background: url(../images/feed.png) no-repeat 1px 50%; padding: 2px 0px 3px 16px; }
 
 /***** Flash & error messages ****/
 #errorExplanation, div.flash, .nodata {
@@ -257,7 +280,6 @@ padding:0.6em;
 z-index:100;
 filter:alpha(opacity=50);
 opacity: 0.5;
--khtml-opacity: 0.5;
 }
 
 html>body #ajax-indicator { position: fixed; }
@@ -500,11 +522,6 @@ vertical-align: middle;
 .icon-move { background-image: url(../images/move.png); }
 .icon-save { background-image: url(../images/save.png); }
 .icon-cancel { background-image: url(../images/cancel.png); }
-.icon-pdf { background-image: url(../images/pdf.png); }
-.icon-csv { background-image: url(../images/csv.png); }
-.icon-html { background-image: url(../images/html.png); }
-.icon-image { background-image: url(../images/image.png); }
-.icon-txt { background-image: url(../images/txt.png); }
 .icon-file { background-image: url(../images/file.png); }
 .icon-folder { background-image: url(../images/folder.png); }
 .open .icon-folder { background-image: url(../images/folder_open.png); }
@@ -519,7 +536,6 @@ vertical-align: middle;
 .icon-attachment  { background-image: url(../images/attachment.png); }
 .icon-index  { background-image: url(../images/index.png); }
 .icon-history  { background-image: url(../images/history.png); }
-.icon-feed  { background-image: url(../images/feed.png); }
 .icon-time  { background-image: url(../images/time.png); }
 .icon-stats  { background-image: url(../images/stats.png); }
 .icon-warning  { background-image: url(../images/warning.png); }
@@ -529,6 +545,8 @@ vertical-align: middle;
 .icon-lock  { background-image: url(../images/locked.png); }
 .icon-unlock  { background-image: url(../images/unlock.png); }
 .icon-checked  { background-image: url(../images/true.png); }
+.icon-details  { background-image: url(../images/zoom_in.png); }
+.icon-report  { background-image: url(../images/report.png); }
 
 .icon22-projects { background-image: url(../images/22x22/projects.png); }
 .icon22-users { background-image: url(../images/22x22/users.png); }

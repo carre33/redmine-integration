@@ -223,10 +223,11 @@ if Date.today >= @date_from and Date.today <= @date_to %>
 </tr>
 </table>
 
-<div class="contextual"><%= l(:label_export_to) %>
-<%= link_to 'PDF', {:zoom => @zoom, :year => @year_from, :month => @month_from, :months => @months, :tracker_ids => @selected_tracker_ids, :with_subprojects => params[:with_subprojects], :format => 'pdf'}, :class => 'icon icon-pdf' %>
-<%= link_to 'PNG', {:zoom => @zoom, :year => @year_from, :month => @month_from, :months => @months, :tracker_ids => @selected_tracker_ids, :with_subprojects => params[:with_subprojects], :format => 'png'}, :class => 'icon icon-image' if respond_to?('gantt_image') %>
-</div>
+<p class="other-formats">
+<%= l(:label_export_to) %>
+<span><%= link_to 'PDF', {:zoom => @zoom, :year => @year_from, :month => @month_from, :months => @months, :tracker_ids => @selected_tracker_ids, :with_subprojects => params[:with_subprojects], :format => 'pdf'}, :class => 'pdf' %></span>
+<%= content_tag('span', link_to('PNG', {:zoom => @zoom, :year => @year_from, :month => @month_from, :months => @months, :tracker_ids => @selected_tracker_ids, :with_subprojects => params[:with_subprojects], :format => 'png'}, :class => 'image')) if respond_to?('gantt_image') %>
+</p>
 
 <% content_for :sidebar do %>
     <h3><%= l(:label_gantt) %></h3>
@@ -235,7 +236,8 @@ if Date.today >= @date_from and Date.today <= @date_to %>
       <label><%= check_box_tag "tracker_ids[]", tracker.id, (@selected_tracker_ids.include? tracker.id.to_s) %> <%= tracker.name %></label><br />
     <% end %>
     <% if @project.active_children.any? %>
-    <br /><label><%= check_box_tag "with_subprojects", 1, params[:with_subprojects] %> <%=l(:label_subproject_plural)%></label>
+    <br /><label><%= check_box_tag 'with_subprojects', 1, @with_subprojects %> <%=l(:label_subproject_plural)%></label>
+    <%= hidden_field_tag 'with_subprojects', 0 %>
     <% end %>
     <p><%= submit_tag l(:button_apply), :class => 'button-small' %></p>
     <% end %>
