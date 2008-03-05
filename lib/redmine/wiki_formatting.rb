@@ -162,6 +162,7 @@ module Redmine
   public
   
     def self.to_html(text, options = {}, &block)
+      text.gsub!(/<!--[^-]*-->/,'')
       TextileFormatter.new(text).to_html(&block)
     end
   end
