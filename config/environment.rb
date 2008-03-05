@@ -48,8 +48,8 @@ Rails::Initializer.run do |config|
 		:port => 25,
 		:domain => "dev.roach.org.ua",
 		:authentication => :login,
-		:user_name => "evdev",
-		:password => "",
+		:user_name => "redmine@somenet.foo",
+		:password => "redmine",
 	}
 	
 	config.action_mailer.perform_deliveries = true
