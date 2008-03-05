@@ -1,0 +1,26 @@
+<h3><%=l(:label_projects_i_am_in)%></h3>
+<%
+projects = Project.find :all,
+                        :conditions => "#{Project.table_name}.status=#{Project::STATUS_ACTIVE} AND" +
+                            " #{Project.table_name}.id IN" +
+                            " (#{User.current.memberships.collect{|m| m.project_id}.join(',')})",
+                        :include => :parent
+@project_tree = projects.group_by {|p| p.parent || p}
+@project_tree.each_key {|p| @project_tree[p] -= [p]}
+%>
+<% if @project_tree.any? %>
+<ul>
+<% @project_tree.keys.sort.each do |project| %>
+<li>
+<%= link_to h(project.name), {:controller => 'projects', :action => 'show', :id => project} %>
+<% if @project_tree[project].any? %>
+    <br />
+    <%= l(:label_subproject_plural) %>:
+    <%= @project_tree[project].sort.collect {|subproject| 
+       link_to(h(subproject.name), {:controller => 'projects', :action => 'show', :id => subproject})}.join(', ') %>
+<% end %>
+</li>
+<% end %>
+</ul>
+<% end %>
+<p class="small"><%= link_to l(:label_project_all), :controller => 'projects', :action => 'index' %></p>
