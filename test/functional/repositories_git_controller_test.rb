@@ -21,18 +21,18 @@ require 'repositories_controller'
 # Re-raise errors caught by the controller.
 class RepositoriesController; def rescue_action(e) raise e end; end
 
-class RepositoriesMercurialControllerTest < Test::Unit::TestCase
+class RepositoriesGitControllerTest < Test::Unit::TestCase
   fixtures :projects, :users, :roles, :members, :repositories, :enabled_modules
 
   # No '..' in the repository path
-  REPOSITORY_PATH = RAILS_ROOT.gsub(%r{config\/\.\.}, '') + '/tmp/test/mercurial_repository'
+  REPOSITORY_PATH = RAILS_ROOT.gsub(%r{config\/\.\.}, '') + '/tmp/test/git_repository'
 
   def setup
     @controller = RepositoriesController.new
     @request    = ActionController::TestRequest.new
     @response   = ActionController::TestResponse.new
     User.current = nil
-    Repository::Mercurial.create(:project => Project.find(3), :url => REPOSITORY_PATH)
+    Repository::Git.create(:project => Project.find(3), :url => REPOSITORY_PATH)
   end
   
   if File.directory?(REPOSITORY_PATH)
@@ -116,7 +116,7 @@ class RepositoriesMercurialControllerTest < Test::Unit::TestCase
                  :sibling => { :tag => 'td', :content => /watcher =/ }
     end
   else
-    puts "Mercurial test repository NOT FOUND. Skipping functional tests !!!"
+    puts "Git test repository NOT FOUND. Skipping functional tests !!!"
     def test_fake; assert true end
   end
 end
