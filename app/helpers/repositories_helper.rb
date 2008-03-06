@@ -58,10 +58,6 @@ module RepositoriesHelper
     path.starts_with?('/') ? path : "/#{path}"
   end
 
-  def rev_name(revision)
-    revision[0..7]
-  end
-
   def subversion_field_tags(form, repository)
       content_tag('p', form.text_field(:url, :size => 60, :required => true, :disabled => (repository && !repository.root_url.blank?)) +
                        '<br />(http://, https://, svn://, file:///)') +
