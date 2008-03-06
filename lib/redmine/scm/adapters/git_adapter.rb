@@ -51,7 +51,7 @@ rev=[]
 		i+=1
 		end	
 		
-		rev = Revision.new({:identifier => params[:commit],
+		rev = Revision.new({:identifier => nil,
                                        :scmid => params[:commit],
                                        :author => params[:author],
                                        :time => Time.parse(params[:date]),
