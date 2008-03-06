@@ -17,15 +17,15 @@
 
 require File.dirname(__FILE__) + '/../test_helper'
 
-class RepositoryMercurialTest < Test::Unit::TestCase
+class RepositoryGitTest < Test::Unit::TestCase
   fixtures :projects
   
   # No '..' in the repository path
-  REPOSITORY_PATH = RAILS_ROOT.gsub(%r{config\/\.\.}, '') + '/tmp/test/mercurial_repository'
+  REPOSITORY_PATH = RAILS_ROOT.gsub(%r{config\/\.\.}, '') + '/tmp/test/git_repository'
   
   def setup
     @project = Project.find(1)
-    assert @repository = Repository::Mercurial.create(:project => @project, :url => REPOSITORY_PATH)
+    assert @repository = Repository::Git.create(:project => @project, :url => REPOSITORY_PATH)
   end
   
   if File.directory?(REPOSITORY_PATH)  
@@ -49,7 +49,7 @@ class RepositoryMercurialTest < Test::Unit::TestCase
       assert_equal 6, @repository.changesets.count
     end
   else
-    puts "Mercurial test repository NOT FOUND. Skipping unit tests !!!"
+    puts "Git test repository NOT FOUND. Skipping unit tests !!!"
     def test_fake; assert true end
   end
 end
