@@ -59,17 +59,18 @@ class Repository::Git < Repository
  
     if scm_info
       # latest revision found in database
-      db_revision = latest_changeset ? latest_changeset.revision : nil
+      db_revision = latest_changeset ? latest_changeset.scmid : nil
+      next_rev = latest_changeset ? latest_changeset.revision + 1 : 1
       # latest revision in the repository
-      scm_revision = scm_info.lastrev.identifier
+      scm_revision = scm_info.lastrev.scmid
 
-      unless changesets.find_by_revision(scm_revision)
+      unless changesets.find_by_scmid(scm_revision)
 
         revisions = scm.revisions('', db_revision, nil)
         transaction do
           revisions.reverse_each do |revision|
             changeset = Changeset.create(:repository => self,
-                                         :revision => revision.identifier,
+                                         :revision => next_rev,
                                          :scmid => revision.scmid,
                                          :committer => revision.author, 
                                          :committed_on => revision.time,
@@ -82,6 +83,7 @@ class Repository::Git < Repository
                             :from_path => change[:from_path],
                             :from_revision => change[:from_revision])
             end
+            next_rev += 1
           end
         end
       end

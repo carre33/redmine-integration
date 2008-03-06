@@ -33,6 +33,8 @@ cmd="cd #{target('')} && git log -1 master -- #{path}" if
 rev=='latest' or rev.nil?
 rev=[]
  i=0
+ puts "get_rev"
+ puts cmd
     shellout(cmd) do |io|
           commit_files=[]
           params={:commit=>'',:author=>'',:date=>'',:message=>'',:file=>{:path=>'',:action=>''}}
@@ -75,7 +77,6 @@ end
 #           shellout(cmd) do |io|
              root_url = target('')
 #           end
-          return nil if $? && $?.exitstatus != 0
           info = Info.new({:root_url => target(''),
                            :lastrev => revisions(root_url,nil,nil,nil).first
                          })
@@ -122,6 +123,8 @@ end
 		cmd << " #{identifier_from}.. " if identifier_from
 		cmd << " #{identifier_to} " if identifier_to
                 #cmd << " HEAD " if !identifier_to
+                puts "revisions"
+                puts cmd
 		shellout(cmd) do |io|
 		files=[]
 		params={:commit=>'',:author=>'',:date=>'',:message=>'',:file=>{:path=>'',:action=>''}}
@@ -130,7 +133,7 @@ end
 		io.each_line do |line|
 	
 			if line=~/^commit/ and i>0
-			revisions << Revision.new({:identifier => params[:commit],
+			revisions << Revision.new({:identifier => nil,
 					:scmid => params[:commit],
 					:author => params[:author],
 					:time => Time.parse(params[:date]),
@@ -153,7 +156,8 @@ end
 		end
 
           return nil if $? && $?.exitstatus != 0
-          revisions
+           puts "RETURNING REVISIONS"
+           revisions
         rescue Errno::ENOENT => e
           raise CommandFailed
 	   end
