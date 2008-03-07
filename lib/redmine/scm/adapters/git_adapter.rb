@@ -128,7 +128,7 @@ module Redmine
           root_url = target('')
           #           end
           info = Info.new({:root_url => target(''),
-                            :lastrev => revisions(root_url,nil,nil,nil).first
+                            :lastrev => revisions(root_url,nil,nil,{:limit => 1}).first
                           })
           info
         rescue Errno::ENOENT => e
@@ -175,6 +175,7 @@ module Redmine
         def revisions(path, identifier_from, identifier_to, options={})
           revisions = Revisions.new
           cmd = "cd #{target('')} && #{GIT_BIN} log --raw "
+          cmd << " -n #{options[:limit].to_i}" if (!options.nil?) && options[:limit]
           cmd << " #{identifier_from}.. " if identifier_from
           cmd << " #{identifier_to} " if identifier_to
           #cmd << " HEAD " if !identifier_to
