@@ -24,7 +24,30 @@ module Redmine
         
         # Git executable name
         GIT_BIN = "git"
-        
+
+        # Convert an identifier to a git revision
+        def id_to_rev(identifier)
+          if identifier.nil?
+            return nil
+          end
+          
+          cmd = "cd #{target('')} && #{GIT_BIN} log --reverse -n 1 --raw "
+          cmd << "--skip="
+          cmd << ((identifier - 1).to_s)
+          shellout(cmd) do |io|
+            answer = nil
+            
+            io.each_line do |line|
+              if answer.nil? && line =~ /^commit ([0-9a-f]{40})$/
+                answer = $1
+              else
+                next
+              end
+            end
+          end
+
+          return answer
+        end
 
         #get the revision of a particuliar file
 	def get_rev (rev,path)
@@ -106,7 +129,7 @@ module Redmine
           root_url = target('')
           #           end
           info = Info.new({:root_url => target(''),
-                            :lastrev => revisions(root_url,nil,nil,nil).first
+                            :lastrev => revisions(root_url,nil,nil,nil).last
                           })
           info
         rescue Errno::ENOENT => e
@@ -158,6 +181,7 @@ module Redmine
             changeset = {}
             parsing_descr = 0  #0: not parsing desc or files, 1: parsing desc, 2: parsing files
             line_feeds = 0
+            revno = 1
 
             io.each_line do |line|
               if line =~ /^commit ([0-9a-f]{40})$/
@@ -165,7 +189,10 @@ module Redmine
                 value = $1
                 if (parsing_descr == 1 || parsing_descr == 2)
                   parsing_descr = 0
-                  revisions << Revision.new({:identifier => nil,
+                  print revno
+                  puts ""
+                  puts changeset[:description]
+                  revisions << Revision.new({:identifier => revno,
                                              :scmid => changeset[:commit],
                                              :author => changeset[:author],
                                              :time => Time.parse(changeset[:date]),
@@ -174,6 +201,7 @@ module Redmine
                                             })
                   changeset = {}
                   files = []
+                  revno = revno + 1
                 end
                 changeset[:commit] = $1
               elsif (parsing_descr == 0) && line =~ /^(\w+):\s*(.*)$/
@@ -198,7 +226,11 @@ module Redmine
                 changeset[:description] << line[4..-1]
               end
             end	
-            revisions << Revision.new({:identifier => nil,
+            print revno
+            puts ""
+            puts changeset[:description]
+
+            revisions << Revision.new({:identifier => revno,
                                        :scmid => changeset[:commit],
                                        :author => changeset[:author],
                                        :time => Time.parse(changeset[:date]),
