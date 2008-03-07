@@ -52,7 +52,7 @@ module Redmine
 
         #get the revision of a particuliar file
 	def get_rev (rev,path)
-          cmd="cd #{target('')} && git show #{rev} #{path}" if rev!='latest'
+          cmd="cd #{target('')} && git show #{rev} -- #{path}" if rev!='latest'
           cmd="cd #{target('')} && git log -1 master -- #{path}" if 
             rev=='latest' or rev.nil?
           rev=[]
@@ -152,11 +152,7 @@ module Redmine
                                        :path => (path.empty? ? name : "#{path}/#{name}"),
                                        :kind => ((type == "tree") ? 'dir' : 'file'),
                                        :size => ((type == "tree") ? nil : size),
-                                       :lastrev => Revision.new({
-                                          :identifier => nil,
-                                          :scmid => sha,
-                                          :author => ""
-                                                                })
+                                       :lastrev => get_rev(identifier,(path.empty? ? name : "#{path}/#{name}")) 
                                                                   
                                      }) unless entries.detect{|entry| entry.name == name}
               end
