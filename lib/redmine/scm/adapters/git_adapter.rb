@@ -128,15 +128,15 @@ module Redmine
           shellout(cmd) do |io|
             files=[]
             changeset = {}
-            parsing_descr = false
+            parsing_descr = 0  #0: not parsing desc or files, 1: parsing desc, 2: parsing files
             line_feeds = 0
 
             io.each_line do |line|
               if line =~ /^commit ([0-9a-f]{40})$/
                 key = "commit"
                 value = $1
-                if parsing_descr && line_feeds > 1
-                  parsing_descr = false
+                if (parsing_descr == 1 || parsing_descr == 2)
+                  parsing_descr = 0
                   revisions << Revision.new({:identifier => nil,
                                              :scmid => changeset[:commit],
                                              :author => changeset[:author],
@@ -148,7 +148,7 @@ module Redmine
                   files = []
                 end
                 changeset[:commit] = $1
-              elsif (!parsing_descr) && line =~ /^(\w+):\s*(.*)$/
+              elsif (parsing_descr == 0) && line =~ /^(\w+):\s*(.*)$/
                 key = $1
                 value = $2
                 if key == "Author"
@@ -156,53 +156,27 @@ module Redmine
                 elsif key == "Date"
                   changeset[:date] = value
                 end
-              elsif (!parsing_descr) && line.chomp.to_s == ""
-                parsing_descr = true
-              
-              
-
-              if parsing_descr == 1
-                if line =~ /^:\d+/
-                  parsing_descr = 2
-                  parsing_files = 1
-                else
-                  changeset[:description] << line.chomp.to_s
-                end
-              elsif parsing_files == 1
-                if line =~ /^:\d+\s+\d+\s+[0-9a-f.]+\s+[0-9a-f.]+\s+(\w)\s+(.+)$/
-                  fileaction = $1
-                  filepath = $2
-                  files << {:action => fileaction, :path => filepath}
-                else
-                  parsing_files = false
-                end
-              else 
-                  
-                  
-                changeset = {}
-                files = []
+              elsif (parsing_descr == 0) && line.chomp.to_s == ""
+                parsing_descr = 1
+              elsif (parsing_descr == 1 || parsing_descr == 2) && line =~ /^:\d+\s+\d+\s+[0-9a-f.]+\s+[0-9a-f.]+\s+(\w)\s+(.+)$/
+                parsing_descr = 2
+                fileaction = $1
+                filepath = $2
+                files << {:action => fileaction, :path => filepath}
+              elsif (parsing_descr == 1) && line.chomp.to_s == ""
+                parsing_descr = 2
+              elsif (parsing_descr == 1)
+                changeset[:description] << line.chomp.to_s
               end
-              if !parsing_descr
-                
-              if line=~/^commit / and i>0
-                revisions << Revision.new({:identifier => nil,
-                                            :scmid => params[:commit],
-                                            :author => params[:author],
-                                            :time => Time.parse(params[:date]),
-                                            :message => params[:message],
-                                            :paths => files
-                                          })
-                
-                files=[]	
-                i=0
-                params={:commit=>'',:author=>'',:date=>'',:message=>'',:file=>{:path=>'',:action=>''}}
-              end
-              params[:commit]=line.chomp.gsub("commit ",'') if i==0
-              params[:author]=line.chomp.gsub("Author: ",'') if i==1
-              params[:date]=line.chomp.gsub("Date: ",'') if i==2
-              params[:message]+= line.chomp.to_s if i>=4 and line[0..0]!=':'
-              i+=1
             end	
+            revisions << Revision.new({:identifier => nil,
+                                       :scmid => changeset[:commit],
+                                       :author => changeset[:author],
+                                       :time => Time.parse(changeset[:date]),
+                                       :message => changeset[:description],
+                                       :paths => files
+                                      })
+
           end
 
           return nil if $? && $?.exitstatus != 0
