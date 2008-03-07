@@ -61,7 +61,6 @@ module Redmine
             files=[]
             changeset = {}
             parsing_descr = 0  #0: not parsing desc or files, 1: parsing desc, 2: parsing files
-            line_feeds = 0
 
             io.each_line do |line|
               if line =~ /^commit ([0-9a-f]{40})$/
@@ -182,7 +181,6 @@ module Redmine
             files=[]
             changeset = {}
             parsing_descr = 0  #0: not parsing desc or files, 1: parsing desc, 2: parsing files
-            line_feeds = 0
             revno = 1
 
             io.each_line do |line|
