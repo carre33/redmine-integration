@@ -57,12 +57,17 @@ class Repository::Git < Repository
   def fetch_changesets
     scm_info = scm.info
     
+
+    puts "fetch_changesets"
     if scm_info
       # latest revision found in database
       db_revision = latest_changeset ? latest_changeset.scmid : nil
+      puts db_revision.to_s
       next_rev = latest_changeset ? latest_changeset.revision + 1 : 1
+      puts next_rev.to_s
       # latest revision in the repository
       scm_revision = scm_info.lastrev.scmid
+      puts scm_revision.to_s
 
       unless changesets.find_by_scmid(scm_revision)
 
