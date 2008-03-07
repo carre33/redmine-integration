@@ -192,7 +192,7 @@ module Redmine
                   print revno
                   puts ""
                   puts changeset[:description]
-                  revisions << Revision.new({:identifier => revno,
+                  revisions << Revision.new({:identifier => nil,
                                              :scmid => changeset[:commit],
                                              :author => changeset[:author],
                                              :time => Time.parse(changeset[:date]),
@@ -230,7 +230,7 @@ module Redmine
             puts ""
             puts changeset[:description]
 
-            revisions << Revision.new({:identifier => revno,
+            revisions << Revision.new({:identifier => nil,
                                        :scmid => changeset[:commit],
                                        :author => changeset[:author],
                                        :time => Time.parse(changeset[:date]),

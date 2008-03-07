@@ -75,6 +75,7 @@ class Repository::Git < Repository
                                          :committer => revision.author, 
                                          :committed_on => revision.time,
                                          :comments => revision.message)
+            next_rev += 1
             
             revision.paths.each do |change|
               Change.create(:changeset => changeset,
@@ -83,7 +84,6 @@ class Repository::Git < Repository
                             :from_path => change[:from_path],
                             :from_revision => change[:from_revision])
             end
-            next_rev += 1
           end
         end
       end
