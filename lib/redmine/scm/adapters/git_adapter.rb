@@ -57,8 +57,6 @@ module Redmine
             rev=='latest' or rev.nil?
           rev=[]
           i=0
-          puts "get_rev"
-          puts cmd
           shellout(cmd) do |io|
             files=[]
             changeset = {}
@@ -138,11 +136,6 @@ module Redmine
         end
         
         def entries(path=nil, identifier=nil)
-          puts " ENTRIES "
-          print path
-          puts ""
-          print identifier
-          puts ""
           path ||= ''
           entries = Entries.new
           cmd = "cd #{target('')} && #{GIT_BIN} show HEAD:#{path}" if identifier.nil?
@@ -180,8 +173,6 @@ module Redmine
           cmd << " #{identifier_from}.. " if identifier_from
           cmd << " #{identifier_to} " if identifier_to
           #cmd << " HEAD " if !identifier_to
-          puts "revisions"
-          puts cmd
           shellout(cmd) do |io|
             files=[]
             changeset = {}
@@ -195,9 +186,6 @@ module Redmine
                 value = $1
                 if (parsing_descr == 1 || parsing_descr == 2)
                   parsing_descr = 0
-                  print revno
-                  puts ""
-                  puts changeset[:description]
                   revisions << Revision.new({:identifier => nil,
                                              :scmid => changeset[:commit],
                                              :author => changeset[:author],
@@ -232,9 +220,6 @@ module Redmine
                 changeset[:description] << line[4..-1]
               end
             end	
-            print revno
-            puts ""
-            puts changeset[:description]
 
             revisions << Revision.new({:identifier => nil,
                                        :scmid => changeset[:commit],
@@ -247,7 +232,6 @@ module Redmine
           end
 
           return nil if $? && $?.exitstatus != 0
-          puts "RETURNING REVISIONS"
           revisions
         rescue Errno::ENOENT => e
           raise CommandFailed
@@ -261,20 +245,12 @@ module Redmine
             identifier_to = nil
           end
 
-          puts "calling diff"
-          print identifier_from
-          puts ""
-          print identifier_to
-          puts ""
-          puts "running diff"
-
           identifier_from = id_to_rev(identifier_from)
           identifier_to = id_to_rev(identifier_to)
           
           cmd = "cd #{target('')} && #{GIT_BIN}  diff   #{identifier_from}^!" if identifier_to.nil?
           cmd = "cd #{target('')} && #{GIT_BIN}  diff #{identifier_to}  #{identifier_from}" if !identifier_to.nil?
           cmd << " -- #{path}" unless path.empty?
-          puts cmd
           diff = []
           shellout(cmd) do |io|
             io.each_line do |line|
@@ -290,9 +266,6 @@ module Redmine
         
         def cat(path, identifier=nil)
           identifier = id_to_rev(identifier)
-          puts " ** CAT "
-          print identifier
-          puts ""
           if identifier.nil?
             identifier = 'HEAD'
           end
