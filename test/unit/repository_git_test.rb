@@ -40,8 +40,8 @@ class RepositoryGitTest < Test::Unit::TestCase
     
     def test_fetch_changesets_incremental
       @repository.fetch_changesets
-      # Remove changesets with revision > 2
-      @repository.changesets.find(:all, :conditions => 'revision > 2').each(&:destroy)
+      # Remove changesets with revision > 3
+      @repository.changesets.find(:all, :conditions => 'revision > 3').each(&:destroy)
       @repository.reload
       assert_equal 3, @repository.changesets.count
       
