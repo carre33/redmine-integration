@@ -327,8 +327,8 @@ module ApplicationHelper
                                               :class => 'version'
             end
           when 'commit'
-            if project && (changeset = project.changesets.find_by_scmid(name))
-              link = link_to h("commit:#{changeset.scmid}"), {:only_path => only_path, :controller => 'repositories', :action => 'revision', :id => project.id, :rev => changeset.revision}, :class => 'changeset', :title => truncate(changeset.comments, 100)
+            if project && (changeset = project.changesets.find(:first, :conditions => ["scmid LIKE ?", "#{name}%"]))
+              link = link_to h("#{name}"), {:only_path => only_path, :controller => 'repositories', :action => 'revision', :id => project.id, :rev => changeset.revision}, :class => 'changeset', :title => truncate(changeset.comments, 100)
             end
           when 'attachment'
             if attachments && attachment = attachments.detect {|a| a.filename == name }
