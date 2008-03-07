@@ -22,5 +22,16 @@ gunzip < test/fixtures/repositories/mercurial_repository.tar.gz | tar -xv -C tmp
 
 Git
 ---
-
 gunzip < test/fixtures/repositories/git_repository.tar.gz | tar -xv -C tmp/test
+
+
+Running Tests
+=============
+
+Run 
+
+  rake --tasks | grep test
+
+to see available tests.
+
+RAILS_ENV=test rake test will run tests.
