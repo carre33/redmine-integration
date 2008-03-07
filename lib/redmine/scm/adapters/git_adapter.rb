@@ -34,8 +34,9 @@ module Redmine
           cmd = "cd #{target('')} && #{GIT_BIN} log --reverse -n 1 --raw "
           cmd << "--skip="
           cmd << ((identifier - 1).to_s)
+          answer = nil
+
           shellout(cmd) do |io|
-            answer = nil
             
             io.each_line do |line|
               if answer.nil? && line =~ /^commit ([0-9a-f]{40})$/
@@ -137,6 +138,11 @@ module Redmine
         end
         
         def entries(path=nil, identifier=nil)
+          puts " ENTRIES "
+          print path
+          puts ""
+          print identifier
+          puts ""
           path ||= ''
           entries = Entries.new
           cmd = "cd #{target('')} && #{GIT_BIN} show HEAD:#{path}" if identifier.nil?
@@ -254,6 +260,17 @@ module Redmine
           else
             identifier_to = nil
           end
+
+          puts "calling diff"
+          print identifier_from
+          puts ""
+          print identifier_to
+          puts ""
+          puts "running diff"
+
+          identifier_from = id_to_rev(identifier_from)
+          identifier_to = id_to_rev(identifier_to)
+          
           cmd = "cd #{target('')} && #{GIT_BIN}  diff   #{identifier_from}^!" if identifier_to.nil?
           cmd = "cd #{target('')} && #{GIT_BIN}  diff #{identifier_to}  #{identifier_from}" if !identifier_to.nil?
           cmd << " #{path}" unless path.empty?
@@ -271,6 +288,13 @@ module Redmine
         end
         
         def cat(path, identifier=nil)
+          identifier = id_to_rev(identifier)
+          puts " ** CAT "
+          print identifier
+          puts ""
+          if identifier.nil?
+            identifier = 'HEAD'
+          end
           cmd = "cd #{target('')} && #{GIT_BIN} show #{identifier}:#{path}"
           cat = nil
           shellout(cmd) do |io|
