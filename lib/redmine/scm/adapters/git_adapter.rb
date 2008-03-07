@@ -138,17 +138,26 @@ module Redmine
         def entries(path=nil, identifier=nil)
           path ||= ''
           entries = Entries.new
-          cmd = "cd #{target('')} && #{GIT_BIN} show HEAD:#{path}" if identifier.nil?
-          cmd = "cd #{target('')} && #{GIT_BIN} show #{identifier}:#{path}" if identifier
+          cmd = "cd #{target('')} && #{GIT_BIN} ls-tree -l HEAD:#{path}" if identifier.nil?
+          cmd = "cd #{target('')} && #{GIT_BIN} ls-tree -l #{identifier}:#{path}" if identifier
           shellout(cmd)  do |io|
             io.each_line do |line|
-              e = line.chomp.split('\\')
-              unless e.to_s.strip=='' or line[0..3]=='tree'
-                name=e.first.split('/')[0]
+              e = line.chomp.to_s
+              if e =~ /^\d+\s+(\w+)\s+([0-9a-f]{40})\s+([0-9-]+)\s+(.+)$/
+                type = $1
+                sha = $2
+                size = $3
+                name = $4
                 entries << Entry.new({:name => name,
                                        :path => (path.empty? ? name : "#{path}/#{name}"),
-                                       :kind => ((e.first.include? '/') ? 'dir' : 'file'),
-                                       :lastrev => get_rev(identifier,(path.empty? ? name : "#{path}/#{name}"))
+                                       :kind => ((type == "tree") ? 'dir' : 'file'),
+                                       :size => ((type == "tree") ? nil : size),
+                                       :lastrev => Revision.new({
+                                          :identifier => nil,
+                                          :scmid => sha,
+                                          :author => ""
+                                                                })
+                                                                  
                                      }) unless entries.detect{|entry| entry.name == name}
               end
             end
