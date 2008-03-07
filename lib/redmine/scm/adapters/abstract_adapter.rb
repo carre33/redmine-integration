@@ -183,7 +183,7 @@ module Redmine
           }.last
         end 
       end
-
+      
       class Revision
         attr_accessor :identifier, :scmid, :name, :author, :time, :message, :paths, :revision, :branch
         def initialize(attributes={})
