@@ -31,7 +31,7 @@ module Redmine
             return nil
           end
           
-          cmd = "cd #{target('')} && #{GIT_BIN} log --reverse -n 1 --raw "
+          cmd = "cd #{target('')} && #{GIT_BIN} log --reverse --raw "
           cmd << "--skip="
           cmd << ((identifier - 1).to_s)
           answer = nil
@@ -273,7 +273,8 @@ module Redmine
           
           cmd = "cd #{target('')} && #{GIT_BIN}  diff   #{identifier_from}^!" if identifier_to.nil?
           cmd = "cd #{target('')} && #{GIT_BIN}  diff #{identifier_to}  #{identifier_from}" if !identifier_to.nil?
-          cmd << " #{path}" unless path.empty?
+          cmd << " -- #{path}" unless path.empty?
+          puts cmd
           diff = []
           shellout(cmd) do |io|
             io.each_line do |line|
