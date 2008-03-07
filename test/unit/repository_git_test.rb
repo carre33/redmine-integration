@@ -35,7 +35,7 @@ class RepositoryGitTest < Test::Unit::TestCase
       
       assert_equal 6, @repository.changesets.count
       assert_equal 11, @repository.changes.count
-      assert_equal "Initial import.\nThe repository contains 3 files.", @repository.changesets.find_by_revision(0).comments
+      assert_equal "Initial import.\nThe repository contains 3 files.", @repository.changesets.find_by_revision(1).comments
     end
     
     def test_fetch_changesets_incremental

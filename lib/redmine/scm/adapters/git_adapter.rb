@@ -36,33 +36,61 @@ module Redmine
           puts "get_rev"
           puts cmd
           shellout(cmd) do |io|
-            commit_files=[]
-            params={:commit=>'',:author=>'',:date=>'',:message=>'',:file=>{:path=>'',:action=>''}}
-            
-            message=''
-            io.each_line do |line|
+            files=[]
+            changeset = {}
+            parsing_descr = 0  #0: not parsing desc or files, 1: parsing desc, 2: parsing files
+            line_feeds = 0
 
-              i=0 if line=~/^commit/
-              params[:commit]=line.chomp.gsub("commit ",'') if i==0
-              
-              params[:author]=line.chomp.gsub("Author: ",'') if i==1
-              params[:date]=line.chomp.gsub("Date: ",'') if i==2
-              params[:message]+= line.chomp.to_s if i==4 and line[0..0]!=':'
-              params[:file][:action], params[:file][:path]= line.chomp.slice(/[ACDMRTUXB].*/).split(' ', 2) if i>=4 and line[0..0]==':'
-              commit_files << {:action=>params[:file][:action],:path=>params[:file][:path]}  if i>=4 and line[0..0]==':'
-              i+=1
+            io.each_line do |line|
+              if line =~ /^commit ([0-9a-f]{40})$/
+                key = "commit"
+                value = $1
+                if (parsing_descr == 1 || parsing_descr == 2)
+                  parsing_descr = 0
+                  rev = Revision.new({:identifier => nil,
+                                             :scmid => changeset[:commit],
+                                             :author => changeset[:author],
+                                             :time => Time.parse(changeset[:date]),
+                                             :message => changeset[:description],
+                                             :paths => files
+                                            })
+                  changeset = {}
+                  files = []
+                end
+                changeset[:commit] = $1
+              elsif (parsing_descr == 0) && line =~ /^(\w+):\s*(.*)$/
+                key = $1
+                value = $2
+                if key == "Author"
+                  changeset[:author] = value
+                elsif key == "Date"
+                  changeset[:date] = value
+                end
+              elsif (parsing_descr == 0) && line.chomp.to_s == ""
+                parsing_descr = 1
+                changeset[:description] = ""
+              elsif (parsing_descr == 1 || parsing_descr == 2) && line =~ /^:\d+\s+\d+\s+[0-9a-f.]+\s+[0-9a-f.]+\s+(\w)\s+(.+)$/
+                parsing_descr = 2
+                fileaction = $1
+                filepath = $2
+                files << {:action => fileaction, :path => filepath}
+              elsif (parsing_descr == 1) && line.chomp.to_s == ""
+                parsing_descr = 2
+              elsif (parsing_descr == 1)
+                changeset[:description] << line
+              end
             end	
-            
             rev = Revision.new({:identifier => nil,
-                                 :scmid => params[:commit],
-                                 :author => params[:author],
-                                 :time => Time.parse(params[:date]),
-                                 :message => params[:message],
-                                 :paths => commit_files
-                               })
+                                       :scmid => changeset[:commit],
+                                       :author => changeset[:author],
+                                       :time => Time.parse(changeset[:date]),
+                                       :message => changeset[:description],
+                                       :paths => files
+                                      })
+
           end
 
-          get_rev('latest',path) if i==0
+          get_rev('latest',path) if rev == []
 
           return nil if $? && $?.exitstatus != 0
           return rev
@@ -167,7 +195,7 @@ module Redmine
               elsif (parsing_descr == 1) && line.chomp.to_s == ""
                 parsing_descr = 2
               elsif (parsing_descr == 1)
-                changeset[:description] << line.chomp.to_s
+                changeset[:description] << line[4..-1]
               end
             end	
             revisions << Revision.new({:identifier => nil,
