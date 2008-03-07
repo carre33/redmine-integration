@@ -50,30 +50,33 @@ class Repository::Git < Repository
   def changesets_for_path(path)
     path = "#{path}" unless path.starts_with?('/')
     Change.find(:all, :include => :changeset, 
-      :conditions => ["repository_id = ? AND path = ?", id, path],
-      :order => "committed_on DESC, #{Changeset.table_name}.revision DESC").collect(&:changeset)
+                :conditions => ["repository_id = ? AND path = ?", id, path],
+                :order => "committed_on DESC, #{Changeset.table_name}.revision DESC").collect(&:changeset)
   end
 
   def fetch_changesets
     scm_info = scm.info
- 
+    
+
     if scm_info
       # latest revision found in database
-      db_revision = latest_changeset ? latest_changeset.revision : nil
+      db_revision = latest_changeset ? latest_changeset.scmid : nil
+      next_rev = latest_changeset ? latest_changeset.revision + 1 : 1
       # latest revision in the repository
-      scm_revision = scm_info.lastrev.identifier
+      scm_revision = scm_info.lastrev.scmid
 
-      unless changesets.find_by_revision(scm_revision)
+      unless changesets.find_by_scmid(scm_revision)
 
         revisions = scm.revisions('', db_revision, nil)
         transaction do
           revisions.reverse_each do |revision|
             changeset = Changeset.create(:repository => self,
-                                         :revision => revision.identifier,
+                                         :revision => next_rev,
                                          :scmid => revision.scmid,
                                          :committer => revision.author, 
                                          :committed_on => revision.time,
                                          :comments => revision.message)
+            next_rev += 1
             
             revision.paths.each do |change|
               Change.create(:changeset => changeset,
