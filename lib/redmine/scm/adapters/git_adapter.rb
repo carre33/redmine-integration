@@ -158,6 +158,7 @@ module Redmine
                 end
               elsif (parsing_descr == 0) && line.chomp.to_s == ""
                 parsing_descr = 1
+                changeset[:description] = ""
               elsif (parsing_descr == 1 || parsing_descr == 2) && line =~ /^:\d+\s+\d+\s+[0-9a-f.]+\s+[0-9a-f.]+\s+(\w)\s+(.+)$/
                 parsing_descr = 2
                 fileaction = $1
