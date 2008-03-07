@@ -127,12 +127,64 @@ module Redmine
           puts cmd
           shellout(cmd) do |io|
             files=[]
-            params={:commit=>'',:author=>'',:date=>'',:message=>'',:file=>{:path=>'',:action=>''}}
-            i=0
-            message=''
+            changeset = {}
+            parsing_descr = false
+            line_feeds = 0
+
             io.each_line do |line|
+              if line =~ /^commit ([0-9a-f]{40})$/
+                key = "commit"
+                value = $1
+                if parsing_descr && line_feeds > 1
+                  parsing_descr = false
+                  revisions << Revision.new({:identifier => nil,
+                                             :scmid => changeset[:commit],
+                                             :author => changeset[:author],
+                                             :time => Time.parse(changeset[:date]),
+                                             :message => changeset[:description],
+                                             :paths => files
+                                            })
+                  changeset = {}
+                  files = []
+                end
+                changeset[:commit] = $1
+              elsif (!parsing_descr) && line =~ /^(\w+):\s*(.*)$/
+                key = $1
+                value = $2
+                if key == "Author"
+                  changeset[:author] = value
+                elsif key == "Date"
+                  changeset[:date] = value
+                end
+              elsif (!parsing_descr) && line.chomp.to_s == ""
+                parsing_descr = true
               
-              if line=~/^commit/ and i>0
+              
+
+              if parsing_descr == 1
+                if line =~ /^:\d+/
+                  parsing_descr = 2
+                  parsing_files = 1
+                else
+                  changeset[:description] << line.chomp.to_s
+                end
+              elsif parsing_files == 1
+                if line =~ /^:\d+\s+\d+\s+[0-9a-f.]+\s+[0-9a-f.]+\s+(\w)\s+(.+)$/
+                  fileaction = $1
+                  filepath = $2
+                  files << {:action => fileaction, :path => filepath}
+                else
+                  parsing_files = false
+                end
+              else 
+                  
+                  
+                changeset = {}
+                files = []
+              end
+              if !parsing_descr
+                
+              if line=~/^commit / and i>0
                 revisions << Revision.new({:identifier => nil,
                                             :scmid => params[:commit],
                                             :author => params[:author],
@@ -149,8 +201,6 @@ module Redmine
               params[:author]=line.chomp.gsub("Author: ",'') if i==1
               params[:date]=line.chomp.gsub("Date: ",'') if i==2
               params[:message]+= line.chomp.to_s if i>=4 and line[0..0]!=':'
-              params[:file][:action], params[:file][:path]= line.chomp.slice(/[ACDMRTUXB].*/).split(' ', 2) if i>=4 and line[0..0]==':'
-              files << {:action=>params[:file][:action],:path=>params[:file][:path]}  if i>=4 and line[0..0]==':'
               i+=1
             end	
           end
