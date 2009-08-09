@@ -1,0 +1,16 @@
+<h3><%=l(:label_projects_i_am_in)%></h3>
+<% user = User.active.current
+    memberships = user.memberships.select do |membership|
+      membership.project.is_public? || (User.current.member_of?(membership.project))
+    end
+%>
+<% unless memberships.empty? %>
+<h3><%=l(:label_project_plural)%></h3>
+<ul>
+<% for membership in memberships %>
+        <li><%= link_to(h(membership.project.name), :controller => 'projects', :action => 'show', :id => membership.project) %>
+    (<%=h membership.role.name %>, <%= format_date(membership.created_on) %>)</li>
+<% end %>
+</ul>
+<% end %>
+<p class="small"><%= link_to l(:label_project_all), :controller => 'projects', :action => 'index' %></p>
