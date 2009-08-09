@@ -22,6 +22,7 @@ class MyController < ApplicationController
 
   BLOCKS = { 'issuesassignedtome' => :label_assigned_to_me_issues,
              'issuesreportedbyme' => :label_reported_issues,
+             'projectsiamin' => :label_projects_i_am_in,
              'issueswatched' => :label_watched_issues,
              'news' => :label_news_latest,
              'calendar' => :label_calendar,

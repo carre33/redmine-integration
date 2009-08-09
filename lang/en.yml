@@ -341,6 +341,7 @@ label_logout: Sign out
 label_help: Help
 label_reported_issues: Reported issues
 label_assigned_to_me_issues: Issues assigned to me
+label_projects_i_am_in: Projects I am in
 label_last_login: Last connection
 label_last_updates: Last updated
 label_last_updates_plural: %d last updated
